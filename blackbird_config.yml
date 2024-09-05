@@ -1,0 +1,50 @@
+pipelines:
+  - name: {{ pipeline_name }}
+    repository_type: {{ repository_type }}
+    repository_name: {{ repository_name }}
+    {%- if repository_connection_arn %}
+    repository_connection_arn: {{ repository_connection_arn }}
+    {%- endif %}
+    partition: {{ partition }}
+    branch: {{ branch }}
+    pipeline_template_path: pipeline/pipeline.jinja.yml
+    root_dir: ./
+    pipeline_template_params:
+      ArbitraryKey: ArbitraryValue
+    orchestrator_role_name: {{ orchestrator_role_name }}
+    tools:
+      artifact_stores:
+        {%- for (region, artifact_store) in artifact_stores_lookup.items() %}
+        {{ region }}: {{ artifact_store }}
+        {%- endfor %}
+      {%- for (key, value) in tools %}
+      {%- if key == 'tags' %}
+      {{ key }}: {{ value }}
+      {%- else %}
+      {{ key }}: '{{ value }}'
+      {%- endif %}
+      {%- endfor %}
+    {%- if environments|length > 0 %}
+    environments:
+      {%- for environment in environments %}
+      -
+        {%- for (key, value) in environment %}
+        {%- if key == 'tags' %}
+        {{ key }}: {{ value }}
+        {%- else %}
+        {{ key }}: '{{ value }}'
+        {%- endif %}
+        {%- endfor %}
+        runner_group: default
+        runner_target: {{ repository_name }}
+        runner_labels:
+          - 'self-hosted'
+          - 'linux'
+      {%- endfor %}
+    {%- else %}
+    environments: []
+    {%- endif %}
+    tags:
+      {%- for key, value in tags.items() %}
+      {{ key }}: '{{ value }}'
+      {%- endfor %}

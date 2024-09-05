@@ -1,0 +1,12 @@
+{
+    "Parameters": {},
+    "Tags": {
+        {%- for key, value in tags.items() %}
+        "{{ key }}": "{{ value }}",
+        {%- endfor %}
+        {%- for key, value in environment.tags.items() %}
+        "{{ key }}": "{{ value }}",
+        {%- endfor %}
+        "isBlackbird": "true"
+    }
+}

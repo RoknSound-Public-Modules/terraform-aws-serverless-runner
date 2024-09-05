@@ -1,0 +1,17 @@
+version: 0.2
+
+env:
+  parameter-store:
+    HOOK_URL: "${NAMESPACE}HookUrl"
+  secrets-manager:
+    HOOK_SECRET: "${NAMESPACE}HookSecret"
+    GH_TOKEN: "${NAMESPACE}GitToken:token"
+
+phases:
+  pre_build:
+    commands:
+      - pip install PyGithub
+  build:
+    commands:
+      - chmod +x $CODEBUILD_SRC_DIR/pipeline/bin/register-hook
+      - $CODEBUILD_SRC_DIR/pipeline/bin/register-hook

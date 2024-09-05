@@ -1,0 +1,438 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Builds the Delivery CodePipeline components and creates an SNS Topic
+  for Manual Gate Approval. Built from Pipeline Factory.
+Parameters:
+  ArbitraryKey:
+    Type: String
+Resources:
+  ApprovalSNSTopic:
+    Properties:
+      DisplayName: '{{ tools.namespace }}-deployment-approval'
+      TopicName: '{{ tools.namespace }}-deployment-approval'
+      KmsMasterKeyId: alias/aws/sns
+    Type: AWS::SNS::Topic
+
+  DeliveryPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStores:
+        {%- for (region, artifact_store) in tools.artifact_stores.items() %}
+        - Region: {{ region }}
+          ArtifactStore:
+            Location: !Sub '{{ artifact_store }}'
+            Type: S3
+            EncryptionKey:
+              Id: !Sub arn:${AWS::Partition}:kms:{{ region }}:${AWS::AccountId}:alias/{{ tools.namespace }}
+              Type: KMS
+        {%- endfor %}
+      Name: {{ name }}
+      RoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/{{ orchestrator_role_name }}'
+      Stages:
+        - Name: Source
+          Actions:
+            {%- if repository_type == 'GitHub.com' %}
+            - ActionTypeId:
+                Version: '1'
+                Owner: ThirdParty
+                Category: Source
+                Provider: GitHub
+              Configuration:
+                Branch: {{ branch }}
+                Owner: {{ repository_name.split('/')[0] }}
+                Repo: {{ repository_name.split('/')[1] }}
+                PollForSourceChanges: 'false'
+                OAuthToken: "{{ '{{' }}resolve:secretsmanager:{{ tools.namespace }}:SecretString:token{{ '}}' }}"
+              Name: ApplicationSource
+              OutputArtifacts:
+                - Name: raw
+              RunOrder: 1
+            {%- endif %}
+            {%- if repository_type == 'GitHub' %}
+            - ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: '1'
+              Configuration:
+                BranchName: {{ branch }}
+                ConnectionArn: {{ repository_connection_arn }}
+                DetectChanges: false
+                FullRepositoryId: {{ repository_name }}
+              Name: ApplicationSource
+              OutputArtifacts:
+                - Name: raw
+              RunOrder: 1
+            {%- endif %}
+            {%- if repository_type == 'CodeCommit' %}
+            - ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: '1'
+              Configuration:
+                BranchName: {{ branch }}
+                PollForSourceChanges: false
+                RepositoryName: {{ repository_name }}
+              Name: ApplicationSource
+              OutputArtifacts:
+                - Name: raw
+              RunOrder: 1
+            {%- endif %}
+        - Name: Configure
+          Actions:
+            - Name: ConfigureTemplates
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: "{{ tools.namespace }}-config-templates"
+                EnvironmentVariables: !Sub |
+                  [
+                    {"name": "PIPELINE_NAME", "value": "{{ name }}"},
+                    {"name": "PIPELINE_PARTITION", "value": "{{ partition or 'primary' }}"},
+                    {"name": "BRANCH", "value": "{{ branch }}"},
+                    {"name": "ROOT_DIR", "value": "{{ root_dir }}"}
+                  ]
+              InputArtifacts:
+                - Name: raw
+              OutputArtifacts:
+                - Name: src
+              RunOrder: 1
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                StackName: {{ tools.namespace }}-tools-codebuild
+                TemplatePath: src::CloudFormation/CodeBuild/codebuild-tools.yml
+                TemplateConfiguration: src::CloudFormation/template-configuration.tools.json
+                RoleArn: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/{{ tools.deployer_role_name }}
+                ParameterOverrides: !Sub |
+                  {
+                    "DeployerRoleName": "{{ tools.deployer_role_name }}",
+                    "Namespace": "{{ tools.namespace }}",
+                    "BuildSpecDir": "pipeline/jobs",
+                    "VpcId": "{{ tools.vpc_id }}",
+                    "IslandSubnetA": "{{ tools.island_subnet_a }}",
+                    "IslandSubnetB": "{{ tools.island_subnet_b }}"
+                  }
+              InputArtifacts:
+                - Name: src
+              Name: CodeBuildJobs-Tools
+              RunOrder: 2
+            {%- for environment in environments %}
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                StackName: {{ environment.namespace }}-codebuild
+                TemplatePath: src::CloudFormation/CodeBuild/codebuild-env.yml
+                TemplateConfiguration: src::CloudFormation/template-configuration.{{ environment.name }}.json
+                RoleArn: !Sub 'arn:${AWS::Partition}:iam::{{ environment.id }}:role/{{ environment.deployer_role_name }}'
+                ParameterOverrides: !Sub |
+                  {
+                    "DeployerRoleName": "{{ environment.deployer_role_name }}",
+                    "Namespace": "{{ environment.namespace }}",
+                    "BuildSpecDir": "pipeline/jobs",
+                    "VpcId": "{{ environment.vpc_id }}",
+                    "IslandSubnetA": "{{ environment.island_subnet_a }}",
+                    "IslandSubnetB": "{{ environment.island_subnet_b }}"
+                  }
+              InputArtifacts:
+                - Name: src
+              Name: CodeBuildJobs-{{ environment.name }}
+              RoleArn: !Sub 'arn:${AWS::Partition}:iam::{{ environment.id }}:role/{{ environment.deployer_role_name }}'
+              Region: {{ environment.region }}
+              RunOrder: 2
+            {%- endfor %}
+            {%- if tools.deployer_self_update %}
+            - Name: Update-SSI-Deployer-Tools
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: {{ tools.namespace }}-update-ssi-tools-deployer
+                EnvironmentVariables: !Sub |
+                  [
+                    {"name": "RESOURCE_PREFIX", "value": "{{ tools.ssi_prefix }}"},
+                    {"name": "DEPLOYER_ROLE_NAME", "value": "{{ tools.deployer_role_name }}"}
+                  ]
+              RoleArn: !Sub 'arn:${AWS::Partition}:iam::{{ tools.id }}:role/{{ tools.deployer_role_name }}'
+              InputArtifacts:
+              -  Name: src
+              Region: {{ tools.region }}
+              RunOrder: 3
+            {% endif %}
+            {%- for environment in environments %}
+              {%- if environment.deployer_self_update %}
+            - Name: Update-SSI-Deployer-{{ environment.name }}
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: {{ environment.namespace }}-update-ssi-envs-deployer
+                EnvironmentVariables: !Sub |
+                  [
+                    {"name": "RESOURCE_PREFIX", "value": "{{ environment.ssi_prefix }}"},
+                    {"name": "DEPLOYER_ROLE_NAME", "value": "{{ environment.deployer_role_name }}"}
+                  ]
+              RoleArn: !Sub 'arn:${AWS::Partition}:iam::{{ environment.id }}:role/{{ environment.deployer_role_name }}'
+              InputArtifacts:
+                -  Name: src
+              Region: {{ environment.region }}
+              RunOrder: 3
+              {% endif %}
+            {% endfor %}
+            - Name: PackageToolsStacks
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: {{ tools.namespace }}-build-package-tools
+              InputArtifacts:
+                - Name: src
+              OutputArtifacts:
+                - Name: tools_package
+              RunOrder: 4
+            - Name: DeployToolsStacks
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                StackName: {{ tools.namespace }}-tools-launch
+                TemplatePath: 'tools_package::CloudFormation/Tools.yml.package'
+                TemplateConfiguration: 'tools_package::CloudFormation/template-configuration.tools.json'
+                RoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/{{ tools.deployer_role_name }}'
+                Capabilities: CAPABILITY_AUTO_EXPAND
+                ParameterOverrides: !Sub |
+                  {
+                    "Namespace": "{{ tools.namespace }}"
+                  }
+              InputArtifacts:
+                - Name: tools_package
+              OutputArtifacts:
+                - Name: tools
+              RunOrder: 5
+              RoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/{{ tools.deployer_role_name }}'
+        - Name: BuildAndPackage
+          Actions:
+            - Name: AppBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Sub '{{ tools.namespace }}-build-appbuild'
+              InputArtifacts:
+                - Name: src
+              OutputArtifacts:
+                - Name: app
+              RunOrder: 1
+            - Name: PackageEnvsStacks
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: {{ tools.namespace }}-build-package-envs
+                PrimarySource: src
+              InputArtifacts:
+                - Name: src
+                - Name: app
+              OutputArtifacts:
+                - Name: envs_package
+              RunOrder: 2
+            - Name: ImageBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: {{ tools.namespace }}-image-build
+                EnvironmentVariables: !Sub |
+                  [
+                    {"name": "AWS_ACCOUNT_ID", "value": "${AWS::AccountId}"}
+                  ]
+              InputArtifacts:
+                - Name: app
+              OutputArtifacts:
+                - Name: image
+              RunOrder: 2
+        {% for environment in environments %}
+        - Name: {{ environment.name }}
+          Actions:
+            - Name: FoundationalStacks
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: REPLACE_ON_FAILURE
+                StackName: {{ environment.namespace }}-launch-foundational
+                TemplatePath: envs_package::CloudFormation/Foundational.{{ environment.name }}.yml.package.{{ environment.region }}
+                TemplateConfiguration: envs_package::CloudFormation/template-configuration.{{ environment.name }}.json
+                OutputFileName: foundational.json
+                RoleArn: !Sub arn:${AWS::Partition}:iam::{{ environment.id }}:role/{{ environment.deployer_role_name }}
+                Capabilities: CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
+                ParameterOverrides: !Sub |
+                  {
+                    "Environment": "{{ environment.name }}",
+                    "SSIPrefix": "{{ environment.ssi_prefix}}",
+                    "PipelineName": "{{ name }}",
+                    "Namespace": "{{ environment.namespace }}",
+                    "VpcId": "{{ environment.vpc_id }}",
+                    "IslandSubnetA": "{{ environment.island_subnet_a }}",
+                    "IslandSubnetB": "{{ environment.island_subnet_b }}",
+                    "RoutableSubnetA": "{{ environment.routable_subnet_a }}",
+                    "RoutableSubnetB": "{{ environment.routable_subnet_b }}",
+                    "RunnerGroup": "{{ environment.runner_group }}",
+                    "RunnerLabels": "{{ environment.runner_labels|join(',') }}",
+                    "HookImage": { "Fn::GetParam" : ["image", "imageDetail.json", "HookImageURI"]},
+                    "Tag": { "Fn::GetParam" : ["image", "imageDetail.json", "Tag"]}
+                  }
+              InputArtifacts:
+                - Name: envs_package
+                - Name: image
+              OutputArtifacts:
+                - Name: {{ environment.name }}_foundational
+              RunOrder: 2
+              RoleArn: !Sub arn:${AWS::Partition}:iam::{{ environment.id }}:role/{{ environment.deployer_role_name }}
+              Region: {{ environment.region }}
+            - Name: RegisterWebhook
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Sub "{{ environment.namespace }}-registerhook"
+                EnvironmentVariables: !Sub |
+                  [
+                    {"name": "RUNNER_TARGET", "value": "{{ environment.runner_target }}"}
+                  ]
+              InputArtifacts:
+                - Name: src
+              RoleArn: !Sub 'arn:${AWS::Partition}:iam::{{ environment.id }}:role/{{ environment.deployer_role_name }}'
+              Region: "{{ environment.region }}"
+              RunOrder: 3
+        {%- endfor %}
+
+  BuildConfigTemplates:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: {{ tools.namespace }}-config-templates
+      Description: Worker for Build CodeBuild Project
+      ServiceRole: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/{{ tools.deployer_role_name }}'
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        EnvironmentVariables: []
+      Source:
+        BuildSpec: "{{ root_dir | replace('./', '') }}pipeline/jobs/build-configtemplates.yml"
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 10
+
+  {%- if notification_emails %}
+  EventPolicy:
+    Type: AWS::SNS::TopicPolicy
+    DependsOn: EventsTopic
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - SNS:Subscribe
+              - SNS:ListSubscriptionsByTopic
+              - SNS:DeleteTopic
+              - SNS:GetTopicAttributes
+              - SNS:Publish
+              - SNS:RemovePermission
+              - SNS:AddPermission
+              - SNS:Receive
+              - SNS:SetTopicAttributes
+            Resource:
+              - !Ref EventsTopic
+            Principal:
+              AWS: '*'
+            Condition:
+              StringEquals:
+                AWS:SourceOwner:
+                  - !Sub ${AWS::AccountId}
+            Sid: {{ tools.namespace }}-SNSPermissions
+          - Effect: Allow
+            Action:
+              - SNS:Publish
+            Resource:
+              - !Ref EventsTopic
+            Principal:
+              Service: events.amazonaws.com
+            Sid: {{ tools.namespace }}-SNSPublish
+      Topics:
+        - !Ref EventsTopic
+
+  FailedActions:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Catch CodePipeline events from the {{ name }} pipeline
+      EventPattern:
+        source:
+          - aws.codepipeline
+        detail-type:
+          - CodePipeline Action Execution State Change
+        detail:
+          state:
+            - FAILED
+          pipeline:
+            - {{ name }}
+          type:
+            category:
+              - Build
+              - Deploy
+      State: ENABLED
+      Targets:
+        - Arn: !Ref EventsTopic
+          Id: {{ tools.namespace }}-pipeline-topic
+          InputTransformer:
+            InputTemplate: !Sub '"Pipeline <pipeline>: <stage> -> <action> has <state>. Go to https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/<pipeline>."'
+            InputPathsMap:
+              pipeline: $.detail.pipeline
+              state: $.detail.state
+              stage: $.detail.stage
+              action: $.detail.action
+
+  EventsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Event alerts for the {{ name }} pipeline
+      TopicName: {{ name }}
+      KmsMasterKeyId: alias/aws/sns
+      Subscription:
+        {%- for email in notification_emails %}
+        - Endpoint: {{ email }}
+          Protocol: email
+        {%- endfor %}
+  {%- endif %}

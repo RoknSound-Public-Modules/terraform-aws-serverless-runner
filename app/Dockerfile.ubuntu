@@ -1,0 +1,71 @@
+FROM public.ecr.aws/lts/ubuntu:22.04_stable
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update -y \
+    && apt-get install -y software-properties-common \
+    # TODO: unblock at proxy
+    # && add-apt-repository -y ppa:git-core/ppa \
+    && apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+    build-essential \
+    bison \
+    curl \
+    ca-certificates \
+    dnsutils \
+    git \
+    jq \
+    libffi-dev \
+    libgdbm-dev \
+    libreadline-dev \
+    libssl-dev \
+    libunwind8 \
+    libyaml-dev \
+    locales \
+    python3-pip \
+    rsync \
+    supervisor \
+    sudo \
+    time \
+    tzdata \
+    unzip \
+    upx \
+    wget \
+    zip \
+    zlib1g-dev \
+    zstd \
+    && ln -sf /usr/bin/python3 /usr/bin/python \
+    && ln -sf /usr/bin/pip3 /usr/bin/pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create directory for runner
+RUN mkdir -p actions-runner/_work
+WORKDIR /actions-runner
+
+# Download and uncompress GH actions runner
+ARG ARCH=${ARCH:-"x64"}
+RUN GH_RUNNER_VERSION=$(curl -fsSL "https://api.github.com/repos/actions/runner/releases/latest" | jq -r '.tag_name' | cut -c2-) \
+    && curl -O -L "https://github.com/actions/runner/releases/download/v${GH_RUNNER_VERSION}/actions-runner-linux-${ARCH}-${GH_RUNNER_VERSION}.tar.gz" \
+    && tar -xzf "actions-runner-linux-${ARCH}-${GH_RUNNER_VERSION}.tar.gz" \
+    && rm -f "actions-runner-linux-${ARCH}-${GH_RUNNER_VERSION}.tar.gz"
+
+# Requirements for setup-python (https://github.com/actions/setup-python#linux)
+RUN mkdir /opt/hostedtoolcache
+
+COPY entrypoint_token.sh entrypoint_token.sh
+RUN chmod +x entrypoint_token.sh
+
+# Update sudoers for passwordless sudo
+RUN printf 'ALL            ALL = (ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+# Create non-root user
+ARG user=actions
+ARG group=actions
+ARG uid=1000
+ARG gid=1000
+RUN groupadd -g ${gid} ${group}
+RUN useradd -u ${uid} -g ${group} -s /bin/bash -m ${user}
+RUN chown -R ${uid}:${gid} ../actions-runner /opt/hostedtoolcache
+
+USER ${uid}:${gid}
+CMD ["./entrypoint_token.sh"]

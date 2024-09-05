@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - rsync blackbird_config.yml $ROOT_DIR
+      - cd $ROOT_DIR
+
+      - pip install -r blackbird/tools/requirements.txt -t blackbird/tools
+
+      - python blackbird/tools/pipeline_config.py --pipeline-name $PIPELINE_NAME --pipeline-partition $PIPELINE_PARTITION --branch $BRANCH --pipeline-config-path ./pipeline_config.json
+      - python blackbird/tools/render_templates.py --pipeline-config-path ./pipeline_config.json --render-manifest-path ./render_manifest.yml
+
+      - SHA="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
+      - printf '{"sha":"%s"}' "$SHA" > commit.json
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: $ROOT_DIR

@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - |
+        aws cloudformation package \
+          --template-file CloudFormation/Tools.yml \
+          --s3-bucket $(sed -re 's|.*:([^/]*).*|\1|g' <<<"$CODEBUILD_SOURCE_VERSION") \
+          --output-template-file CloudFormation/Tools.yml.package
+artifacts:
+  files:
+    - '**/*'

@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - cp -r $CODEBUILD_SRC_DIR_app/runnerhook .
+      - environments=$(cat $CODEBUILD_SRC_DIR/pipeline_config.json | jq -rc '.environments[].name')
+
+      - |
+        for environment_name in $environments;do
+          region=$(cat $CODEBUILD_SRC_DIR/pipeline_config.json | jq -r ".environments[] | select(.name == \"${environment_name}\") | .region")
+          bucket=$(cat $CODEBUILD_SRC_DIR/pipeline_config.json | jq -r ".tools.artifact_stores[\"${region}\"]")
+
+          aws cloudformation package \
+            --template-file CloudFormation/Foundational.yml \
+            --s3-bucket $bucket \
+            --output-template-file "CloudFormation/Foundational.${environment_name}.yml.package.${region}"
+        done
+
+artifacts:
+  files:
+    - '**/*'

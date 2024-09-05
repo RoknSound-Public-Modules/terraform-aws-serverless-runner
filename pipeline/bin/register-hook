@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+from os import environ
+import logging
+from unittest import runner
+from github import Github
+
+def create_github_hook(runner_target: str, hook_url: str, secret: str, gh_token: str) -> str:
+    '''
+    Register the webhook with the repo, if it doesn't already exist
+    :param runner_target: the name of the github repo or organization
+    :param hook_url: the webhook url to setup
+    :param secret: the webhook secret key
+    :param gh_token: the github api token for API access
+    '''
+
+    print(f"Configuring hook for {runner_target}", flush=True)
+
+    try:
+        gh_client = Github(base_url=environ.get('GITHUB_API_URL'), login_or_token=gh_token)
+        if '/' in runner_target:
+            target = gh_client.get_repo(runner_target)
+        else:
+            target = gh_client.get_organization(runner_target)
+
+        config = {
+            'url': hook_url,
+            'content_type': 'json',
+            'secret': secret
+        }
+        events = ['workflow_job']
+
+        # Check if the hook already exists
+        for hook in target.get_hooks():
+            if hook.config['url'] == hook_url and 'workflow_job' in hook.events:
+                print(f"Updating webhook {hook.id} for {runner_target}", flush=True)
+                hook.edit(hook.name, config, events=events, active=hook.active)
+                return hook
+
+        # If not, create the hook
+        hook = target.create_hook('web', config, events, True)
+        print(f"Created webhoook {hook.id} for {runner_target}", flush=True)
+        return hook
+    except Exception as error:
+        print('Error registering webhook')
+        raise error
+
+def main():
+    create_github_hook(environ['RUNNER_TARGET'], environ['HOOK_URL'], environ['HOOK_SECRET'], environ['GH_TOKEN'])
+
+if __name__ == "__main__":
+    main()

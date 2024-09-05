@@ -1,0 +1,12 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - |
+        aws lambda invoke \
+          --function-name "${RESOURCE_PREFIX}-ssi_deployer_updater" \
+          --payload '{ "provisioned_product_name": "${DEPLOYER_ROLE_NAME}" }' \
+          --invocation-type RequestResponse \
+          --log-type Tail - | jq '.LogResult' -r | base64 --decode
+artifacts:
+  discard-paths: yes
