@@ -62,3 +62,28 @@ It is recommended that you regularly change the access token that is used for re
 ## Setting up workflows
 
 The Blackbird team has created workflows for various tasks that can be used in a Blackbird pipeline that can be accessed here: https://github.mmm.com/blackbird/blackbird-actions-workflow. This repo will be updated regularly and we welcome contributers.
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+No requirements.
+
+## Providers
+
+No providers.
+
+## Modules
+
+No modules.
+
+## Resources
+
+No resources.
+
+## Inputs
+
+No inputs.
+
+## Outputs
+
+No outputs.
+<!-- END_TF_DOCS -->
