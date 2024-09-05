@@ -23,3 +23,93 @@ variable "vpc_id" {
   description = "VPC ID to build in"
   type        = string
 }
+
+variable "environment" {
+  description = "Name of the AWS deployment environment"
+  type        = string
+}
+
+variable "serverless_role_arn" {
+  description = "Execution role of the lambda function"
+  type        = string
+}
+
+variable "island_subnet_a" {
+  description = "Subnets used for Service Template, passed via foundational.json"
+  type        = string
+}
+
+variable "island_subnet_b" {
+  description = "Subnets used for Service Template, passed via foundational.json"
+  type        = string
+}
+
+variable "routable_subnet_a" {
+  description = "Subnets used for Service Template, passed via foundational.json"
+  type        = string
+}
+
+variable "routable_subnet_b" {
+  description = "Subnets used for Service Template, passed via foundational.json"
+  type        = string
+}
+
+variable "ecs_cluster" {
+  description = "Cluster used to create and execute tasks"
+  type        = string
+}
+
+variable "log_group" {
+  description = "Log group for task logging"
+  type        = string
+}
+
+variable "ecs_task_role_arn" {
+  description = "ARN for role to create tasks in ECS"
+  type        = string
+}
+
+variable "ecs_task_execution_role_arn" {
+  description = "ARN for role to execute tasks in ECS"
+  type        = string
+}
+
+variable "image" {
+  description = "The container to run tasks in"
+  type        = string
+}
+
+variable "tag" {
+  description = "Used as the aws log stream prefix"
+  type        = string
+}
+
+variable "container_security_group" {
+  description = "Security group to apply to containers"
+  type        = string
+}
+
+variable "serverless_security_group" {
+  description = "Security group to apply to lambda"
+  type        = string
+}
+
+variable "vpce_security_group" {
+  description = "Security group to apply to vpc endpoint"
+  type        = string
+}
+
+variable "git_hook_secret" {
+  description = "Secret for GithubHook"
+  type        = string
+}
+
+variable "runner_group" {
+  description = "Name of the runner group"
+  type        = string
+}
+
+variable "runner_labels" {
+  description = "Comma-separated list of runner labels"
+  type        = string
+}
