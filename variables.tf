@@ -101,3 +101,18 @@ variable "github_url" {
   description = "github url"
   default     = "https://github.com/api/v3"
 }
+
+variable "github_org" {
+  type        = string
+  description = "github organization"
+}
+
+variable "github_repo" {
+  type        = string
+  description = "github repository"
+}
+
+variable "webhook_events" {
+  type        = list(string)
+  description = "github webhook events"
+}

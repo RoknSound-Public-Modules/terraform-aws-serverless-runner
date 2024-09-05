@@ -32,7 +32,7 @@ resource "aws_ecs_task_definition" "runner_task_definition" {
       log_configuration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = ws_cloudwatch_log_group.function_log_group.name
+          awslogs-group         = aws_cloudwatch_log_group.function_log_group.name
           awslogs-region        = data.aws_region.current.name
           awslogs-stream-prefix = var.tag
         }
@@ -110,7 +110,8 @@ resource "aws_ssm_parameter" "hook_url_ssm_parameter" {
   name        = "${var.namespace}HookUrl"
   description = "The API endpoint for runner github webhook"
   type        = "String"
-  value       = "https://${aws_apigatewayv2_api.hook_api.id}.execute-api.${data.aws_region.current.name}.amazonaws.com/prod/workflow/run"
+  # Value: !Sub "https://${HookApi}-${VpcEndpoint}.execute-api.${AWS::Region}.${AWS::URLSuffix}/prod/workflow/run"
+  value = "${aws_apigatewayv2_api.hook_api.api_endpoint}.execute-api.${data.aws_region.current.name}.amazonaws.com/prod/workflow/run"
 }
 
 output "function_name" {
