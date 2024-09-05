@@ -18,11 +18,6 @@ variable "environment" {
   type        = string
 }
 
-variable "serverless_role_arn" {
-  description = "Execution role of the lambda function"
-  type        = string
-}
-
 variable "island_subnet_a" {
   description = "Subnets used for Service Template"
   type        = string
@@ -45,11 +40,6 @@ variable "routable_subnet_b" {
 
 variable "ecs_cluster" {
   description = "Cluster used to create and execute tasks"
-  type        = string
-}
-
-variable "log_group" {
-  description = "Log group for task logging"
   type        = string
 }
 

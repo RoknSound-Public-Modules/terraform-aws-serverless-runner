@@ -79,7 +79,7 @@ resource "aws_lambda_function" "function" {
   function_name = var.namespace
   handler       = "handler.handler"
   runtime       = "python3.9"
-  role          = var.serverless_role_arn
+  role          = aws_iam_role.runner_hook_role.arn
   filename      = "runnerhook.zip"
   memory_size   = 128
   timeout       = 30
