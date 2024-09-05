@@ -120,7 +120,7 @@ No modules.
 | <a name="input_ecs_task_role_arn"></a> [ecs\_task\_role\_arn](#input\_ecs\_task\_role\_arn) | ARN for role to create tasks in ECS | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of the AWS deployment environment | `string` | n/a | yes |
 | <a name="input_git_hook_secret"></a> [git\_hook\_secret](#input\_git\_hook\_secret) | Secret for GithubHook | `string` | n/a | yes |
-| <a name="input_github_secret_arn"></a> [github\_secret\_arn](#input\_github\_secret\_arn) | Secret ARN of PAT for github actions | `string` | n/a | yes |
+| <a name="input_GITHUB_PAT_TOKEN_ARN"></a> [github\_secret\_arn](#input\_github\_secret\_arn) | Secret ARN of PAT for github actions | `string` | n/a | yes |
 | <a name="input_hook_secret_arn"></a> [hook\_secret\_arn](#input\_hook\_secret\_arn) | Secret ARN of PAT for github actions | `string` | n/a | yes |
 | <a name="input_image"></a> [image](#input\_image) | The container to run tasks in | `string` | n/a | yes |
 | <a name="input_island_subnet_a"></a> [island\_subnet\_a](#input\_island\_subnet\_a) | Subnets used for Service Template, passed via foundational.json | `string` | n/a | yes |

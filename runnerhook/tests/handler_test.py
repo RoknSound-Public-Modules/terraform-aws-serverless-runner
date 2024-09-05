@@ -22,7 +22,7 @@ def in_progress_payload():
 @pytest.fixture
 def preset_environment():
     return {
-        'GITHUB_SECRET_ARN': 'somevalue',
+        'GITHUB_PAT_TOKEN_ARN': 'somevalue',
         'GITHUB_API_URL': 'https://git.mmm.com/api/v3',
         'GITHUB_HOOK_SECRET': 'thesecrethooksettings',
         'ECS_CLUSTER': 'mytestcluster',
@@ -182,7 +182,7 @@ def test_generate_runner_token_api_failure(mock_github, preset_environment):
         Description='string',
         SecretString='{"token": "supersecretoken"}'
     )
-    preset_environment['GITHUB_SECRET_ARN'] = fake_secret['ARN']
+    preset_environment['GITHUB_PAT_TOKEN_ARN'] = fake_secret['ARN']
 
     mock_repo = mock.MagicMock()
     mock_repo._requester.requestJson.return_value = 401, [], 'bad auth'
@@ -203,7 +203,7 @@ def test_generate_runner_token(mock_github, preset_environment):
         Description='string',
         SecretString='{"token": "supersecretoken"}'
     )
-    preset_environment['GITHUB_SECRET_ARN'] = fake_secret['ARN']
+    preset_environment['GITHUB_PAT_TOKEN_ARN'] = fake_secret['ARN']
 
     mock_repo = mock.MagicMock()
     mock_repo._requester.requestJson.return_value = 201, [], '{"token": "supersecrettoken", "expires_at": "tomorrow" }'

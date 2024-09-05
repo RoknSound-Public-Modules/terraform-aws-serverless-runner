@@ -4,8 +4,8 @@ resource "aws_ecs_task_definition" "runner_task_definition" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "2048"
   memory                   = "4096"
-  task_role_arn            = var.ecs_task_role_arn
-  execution_role_arn       = var.ecs_task_execution_role_arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
@@ -32,8 +32,8 @@ resource "aws_ecs_task_definition" "runner_task_definition" {
       log_configuration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = var.log_group
-          awslogs-region        = "us-west-2"
+          awslogs-group         = ws_cloudwatch_log_group.function_log_group.name
+          awslogs-region        = data.aws_region.current.name
           awslogs-stream-prefix = var.tag
         }
       }
@@ -45,7 +45,7 @@ resource "aws_vpc_endpoint" "vpc_endpoint" {
   vpc_id             = var.vpc_id
   service_name       = "com.amazonaws.${data.aws_region.current.name}.execute-api"
   vpc_endpoint_type  = "Interface"
-  security_group_ids = [var.vpce_security_group]
+  security_group_ids = [aws_security_group.vpce_security_group.id]
   subnet_ids         = [var.routable_subnet_a, var.routable_subnet_b]
 }
 
@@ -87,13 +87,13 @@ resource "aws_lambda_function" "function" {
   environment {
     variables = {
       AWS_ENV                  = var.environment
-      GITHUB_SECRET_ARN        = var.github_secret_arn
-      GITHUB_API_URL           = "https://github.mmm.com/api/v3"
-      GITHUB_HOOK_SECRET       = var.git_hook_secret
+      GITHUB_PAT_TOKEN_ARN     = aws_secretsmanager_secret.git_access_token.arn
+      GITHUB_API_URL           = var.github_url
+      GITHUB_HOOK_SECRET       = random_password.git_hook_secret_password.result
       ECS_CLUSTER              = var.ecs_cluster
       TASK_DEFINITION_ARN      = aws_ecs_task_definition.runner_task_definition.arn
       CONTAINER_NAME           = var.namespace
-      CONTAINER_SECURITY_GROUP = var.container_security_group
+      CONTAINER_SECURITY_GROUP = aws_security_group.container_security_group.id
       SUBNET_A                 = var.island_subnet_a
       SUBNET_B                 = var.island_subnet_b
       RUNNER_LABELS            = var.runner_labels

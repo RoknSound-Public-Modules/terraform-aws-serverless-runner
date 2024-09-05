@@ -18,11 +18,6 @@ resource "aws_secretsmanager_secret_version" "git_hook_secret_version" {
   secret_string = random_password.git_hook_secret_password.result
 }
 
-resource "random_password" "git_access_token_password" {
-  length           = 64
-  special          = true
-  override_special = "_%@"
-}
 
 resource "aws_secretsmanager_secret" "git_access_token" {
   description = "GitHub access token for registering runners in the organization or repo"
@@ -36,7 +31,7 @@ resource "aws_secretsmanager_secret" "git_access_token" {
 
 resource "aws_secretsmanager_secret_version" "git_access_token_version" {
   secret_id     = aws_secretsmanager_secret.git_access_token.id
-  secret_string = random_password.git_access_token_password.result
+  secret_string = var.github_pat
 }
 
 output "git_hook_secret" {

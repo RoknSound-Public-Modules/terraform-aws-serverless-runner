@@ -113,7 +113,7 @@ def verify_environment():
     :raise Exception: if a environment variable is missing
     '''
     expected_keys = [
-        'GITHUB_SECRET_ARN',
+        'GITHUB_PAT_TOKEN_ARN',
         'GITHUB_API_URL',
         'GITHUB_HOOK_SECRET',
         'ECS_CLUSTER',
@@ -140,7 +140,7 @@ def generate_runner_token(repo_name: str, boto_session: boto3.Session) -> str:
     '''
     try:
         session_manager = boto_session.client('secretsmanager')
-        git_secret = session_manager.get_secret_value(SecretId=environ.get('GITHUB_SECRET_ARN'))['SecretString']
+        git_secret = session_manager.get_secret_value(SecretId=environ.get('GITHUB_PAT_TOKEN_ARN'))['SecretString']
         git_token = json.loads(git_secret)["token"]
     except Exception as error:
         logger.exception('Unable to retrieve git secret')

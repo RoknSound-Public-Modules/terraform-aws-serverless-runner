@@ -167,7 +167,7 @@ Resources:
       Environment:
         Variables:
           AWS_ENV: !Ref Environment
-          GITHUB_SECRET_ARN: !Ref GithubSecretArn
+          GITHUB_PAT_TOKEN_ARN: !Ref GithubSecretArn
           GITHUB_API_URL: https://github.mmm.com/api/v3
           GITHUB_HOOK_SECRET: !Ref GitHookSecret
           ECS_CLUSTER: !Ref EcsCluster
