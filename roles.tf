@@ -72,7 +72,8 @@ resource "aws_iam_role" "ecs_task_execution_role" {
             "secretsmanager:GetSecretValue"
           ]
           Resource = [
-            var.GITHUB_PAT_TOKEN_ARN
+            aws_secretsmanager_secret.git_access_token.arn,
+            aws_secretsmanager_secret.git_hook_secret.arn
           ]
         }
       ]
@@ -115,8 +116,8 @@ resource "aws_iam_role" "runner_hook_role" {
             "secretsmanager:GetSecretValue"
           ]
           Resource = [
-            var.GITHUB_PAT_TOKEN_ARN,
-            var.hook_secret_arn
+            aws_secretsmanager_secret.git_access_token.arn,
+            aws_secretsmanager_secret.git_hook_secret.arn
           ]
         }
       ]
