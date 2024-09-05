@@ -3,11 +3,6 @@ variable "namespace" {
   type        = string
 }
 
-variable "GITHUB_PAT_TOKEN_ARN" {
-  description = "Secret ARN of PAT for github actions"
-  type        = string
-}
-
 variable "hook_secret_arn" {
   description = "Secret ARN of PAT for github actions"
   type        = string
