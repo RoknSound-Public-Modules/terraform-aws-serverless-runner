@@ -134,7 +134,6 @@ No requirements.
 | <a name="input_routable_subnet_b"></a> [routable\_subnet\_b](#input\_routable\_subnet\_b) | Subnets used for Service Template | `string` | n/a | yes |
 | <a name="input_runner_group"></a> [runner\_group](#input\_runner\_group) | Name of the runner group | `string` | n/a | yes |
 | <a name="input_runner_labels"></a> [runner\_labels](#input\_runner\_labels) | Comma-separated list of runner labels | `string` | n/a | yes |
-| <a name="input_serverless_security_group"></a> [serverless\_security\_group](#input\_serverless\_security\_group) | Security group to apply to lambda | `string` | n/a | yes |
 | <a name="input_ssi_prefix"></a> [ssi\_prefix](#input\_ssi\_prefix) | Prefix used for resources needing boundary permissions | `string` | n/a | yes |
 | <a name="input_tag"></a> [tag](#input\_tag) | Used as the aws log stream prefix | `string` | n/a | yes |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID to build in | `string` | n/a | yes |
