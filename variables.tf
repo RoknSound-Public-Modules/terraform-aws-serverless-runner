@@ -3,16 +3,10 @@ variable "namespace" {
   type        = string
 }
 
-variable "hook_secret_arn" {
-  description = "Secret ARN of PAT for github actions"
-  type        = string
-}
-
 variable "ssi_prefix" {
   description = "Prefix used for resources needing boundary permissions"
   type        = string
 }
-
 
 variable "vpc_id" {
   description = "VPC ID to build in"
