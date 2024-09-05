@@ -53,12 +53,6 @@ variable "tag" {
   type        = string
 }
 
-
-variable "serverless_security_group" {
-  description = "Security group to apply to lambda"
-  type        = string
-}
-
 variable "runner_group" {
   description = "Name of the runner group"
   type        = string

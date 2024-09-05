@@ -101,7 +101,7 @@ resource "aws_lambda_function" "function" {
   }
 
   vpc_config {
-    security_group_ids = [var.serverless_security_group]
+    security_group_ids = [aws_security_group.serverless_security_group.id]
     subnet_ids         = [var.island_subnet_a, var.island_subnet_b]
   }
 }
