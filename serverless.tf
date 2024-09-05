@@ -14,20 +14,25 @@ resource "aws_ecs_task_definition" "runner_task_definition" {
       essential = true
       cpu       = 2048
       memory    = 4096
-      environment = [
+      environment = concat([
         {
           name  = "NAMESPACE"
           value = var.namespace
-        },
-        {
-          name  = "RUNNER_GROUP"
-          value = var.runner_group
-        },
-        {
-          name  = "RUNNER_LABELS"
-          value = var.runner_labels
         }
-      ]
+        ],
+        var.runner_group != null ? [
+          {
+            name  = "RUNNER_GROUP"
+            value = var.runner_group
+          }
+        ] : [],
+        var.runner_labels != null ? [
+          {
+            name  = "RUNNER_LABELS"
+            value = var.runner_labels
+          }
+        ] : []
+      )
       command = ["./entrypoint_token.sh"]
       log_configuration = {
         logDriver = "awslogs"

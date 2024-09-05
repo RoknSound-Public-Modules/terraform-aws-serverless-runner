@@ -56,11 +56,13 @@ variable "tag" {
 variable "runner_group" {
   description = "Name of the runner group"
   type        = string
+  default     = null
 }
 
 variable "runner_labels" {
   description = "Comma-separated list of runner labels"
   type        = string
+  default     = null
 }
 
 variable "github_pat" {
