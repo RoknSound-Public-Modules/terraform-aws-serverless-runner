@@ -61,7 +61,7 @@ module "files" {
   pattern = "./runnerhoook/*"
 }
 
-resource "archive_file" "runnerhook" {
+data "archive_file" "runnerhook" {
   type        = "zip"
   output_path = "runnerhook.zip"
 
