@@ -120,7 +120,6 @@ No requirements.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_GITHUB_PAT_TOKEN_ARN"></a> [GITHUB\_PAT\_TOKEN\_ARN](#input\_GITHUB\_PAT\_TOKEN\_ARN) | Secret ARN of PAT for github actions | `string` | n/a | yes |
 | <a name="input_ecs_cluster"></a> [ecs\_cluster](#input\_ecs\_cluster) | Cluster used to create and execute tasks | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of the AWS deployment environment | `string` | n/a | yes |
 | <a name="input_github_org"></a> [github\_org](#input\_github\_org) | github organization | `string` | n/a | yes |
