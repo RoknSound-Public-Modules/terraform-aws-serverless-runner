@@ -71,17 +71,21 @@ No requirements.
 
 | Name | Version |
 |------|---------|
+| <a name="provider_archive"></a> [archive](#provider\_archive) | 2.5.0 |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 5.65.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.6.2 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_files"></a> [files](#module\_files) | HappyPathway/files/ls | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
+| [archive_file.runnerhook](https://registry.terraform.io/providers/hashicorp/archive/latest/docs/resources/file) | resource |
 | [aws_apigatewayv2_api.hook_api](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api) | resource |
 | [aws_cloudwatch_log_group.access_log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.function_log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
