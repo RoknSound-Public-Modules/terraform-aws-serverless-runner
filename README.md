@@ -69,7 +69,10 @@ No requirements.
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.65.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.6.2 |
 
 ## Modules
 
@@ -77,13 +80,79 @@ No modules.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_apigatewayv2_api.hook_api](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api) | resource |
+| [aws_cloudwatch_log_group.access_log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.function_log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_ecs_task_definition.runner_task_definition](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition) | resource |
+| [aws_iam_role.ecs_task_execution_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.ecs_task_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.runner_hook_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_lambda_function.function](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_secretsmanager_secret.git_access_token](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
+| [aws_secretsmanager_secret.git_hook_secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
+| [aws_secretsmanager_secret_version.git_access_token_version](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
+| [aws_secretsmanager_secret_version.git_hook_secret_version](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
+| [aws_security_group.container_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.serverless_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.vpce_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group_rule.container_security_group_egress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.serverless_security_group_egress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.vpce_security_group_egress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.vpce_security_group_ingress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_ssm_parameter.hook_url_ssm_parameter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_parameter) | resource |
+| [aws_vpc_endpoint.vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [random_password.git_access_token_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [random_password.git_hook_secret_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_container_security_group"></a> [container\_security\_group](#input\_container\_security\_group) | Security group to apply to containers | `string` | n/a | yes |
+| <a name="input_ecs_cluster"></a> [ecs\_cluster](#input\_ecs\_cluster) | Cluster used to create and execute tasks | `string` | n/a | yes |
+| <a name="input_ecs_task_execution_role_arn"></a> [ecs\_task\_execution\_role\_arn](#input\_ecs\_task\_execution\_role\_arn) | ARN for role to execute tasks in ECS | `string` | n/a | yes |
+| <a name="input_ecs_task_role_arn"></a> [ecs\_task\_role\_arn](#input\_ecs\_task\_role\_arn) | ARN for role to create tasks in ECS | `string` | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | Name of the AWS deployment environment | `string` | n/a | yes |
+| <a name="input_git_hook_secret"></a> [git\_hook\_secret](#input\_git\_hook\_secret) | Secret for GithubHook | `string` | n/a | yes |
+| <a name="input_github_secret_arn"></a> [github\_secret\_arn](#input\_github\_secret\_arn) | Secret ARN of PAT for github actions | `string` | n/a | yes |
+| <a name="input_hook_secret_arn"></a> [hook\_secret\_arn](#input\_hook\_secret\_arn) | Secret ARN of PAT for github actions | `string` | n/a | yes |
+| <a name="input_image"></a> [image](#input\_image) | The container to run tasks in | `string` | n/a | yes |
+| <a name="input_island_subnet_a"></a> [island\_subnet\_a](#input\_island\_subnet\_a) | Subnets used for Service Template, passed via foundational.json | `string` | n/a | yes |
+| <a name="input_island_subnet_b"></a> [island\_subnet\_b](#input\_island\_subnet\_b) | Subnets used for Service Template, passed via foundational.json | `string` | n/a | yes |
+| <a name="input_log_group"></a> [log\_group](#input\_log\_group) | Log group for task logging | `string` | n/a | yes |
+| <a name="input_namespace"></a> [namespace](#input\_namespace) | Prefix for all resources generated by the pipeline | `string` | n/a | yes |
+| <a name="input_routable_subnet_a"></a> [routable\_subnet\_a](#input\_routable\_subnet\_a) | Subnets used for Service Template, passed via foundational.json | `string` | n/a | yes |
+| <a name="input_routable_subnet_b"></a> [routable\_subnet\_b](#input\_routable\_subnet\_b) | Subnets used for Service Template, passed via foundational.json | `string` | n/a | yes |
+| <a name="input_runner_group"></a> [runner\_group](#input\_runner\_group) | Name of the runner group | `string` | n/a | yes |
+| <a name="input_runner_labels"></a> [runner\_labels](#input\_runner\_labels) | Comma-separated list of runner labels | `string` | n/a | yes |
+| <a name="input_serverless_role_arn"></a> [serverless\_role\_arn](#input\_serverless\_role\_arn) | Execution role of the lambda function | `string` | n/a | yes |
+| <a name="input_serverless_security_group"></a> [serverless\_security\_group](#input\_serverless\_security\_group) | Security group to apply to lambda | `string` | n/a | yes |
+| <a name="input_ssi_prefix"></a> [ssi\_prefix](#input\_ssi\_prefix) | Prefix used for resources needing boundary permissions | `string` | n/a | yes |
+| <a name="input_tag"></a> [tag](#input\_tag) | Used as the aws log stream prefix | `string` | n/a | yes |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID to build in | `string` | n/a | yes |
+| <a name="input_vpce_security_group"></a> [vpce\_security\_group](#input\_vpce\_security\_group) | Security group to apply to vpc endpoint | `string` | n/a | yes |
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_access_log_group_arn"></a> [access\_log\_group\_arn](#output\_access\_log\_group\_arn) | n/a |
+| <a name="output_container_security_group"></a> [container\_security\_group](#output\_container\_security\_group) | n/a |
+| <a name="output_ecs_task_execution_role_arn"></a> [ecs\_task\_execution\_role\_arn](#output\_ecs\_task\_execution\_role\_arn) | n/a |
+| <a name="output_ecs_task_role_arn"></a> [ecs\_task\_role\_arn](#output\_ecs\_task\_role\_arn) | n/a |
+| <a name="output_function_log_group"></a> [function\_log\_group](#output\_function\_log\_group) | n/a |
+| <a name="output_function_name"></a> [function\_name](#output\_function\_name) | n/a |
+| <a name="output_git_access_token"></a> [git\_access\_token](#output\_git\_access\_token) | n/a |
+| <a name="output_git_hook_secret"></a> [git\_hook\_secret](#output\_git\_hook\_secret) | n/a |
+| <a name="output_log_group"></a> [log\_group](#output\_log\_group) | n/a |
+| <a name="output_runner_hook_role_arn"></a> [runner\_hook\_role\_arn](#output\_runner\_hook\_role\_arn) | n/a |
+| <a name="output_serverless_security_group"></a> [serverless\_security\_group](#output\_serverless\_security\_group) | n/a |
+| <a name="output_vpce_security_group"></a> [vpce\_security\_group](#output\_vpce\_security\_group) | n/a |
+| <a name="output_web_hook_url"></a> [web\_hook\_url](#output\_web\_hook\_url) | n/a |
 <!-- END_TF_DOCS -->
