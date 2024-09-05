@@ -56,12 +56,31 @@ resource "aws_apigatewayv2_api" "hook_api" {
   target = aws_lambda_function.function.arn
 }
 
+module "files" {
+  source  = "HappyPathway/files/ls"
+  pattern = "./runnerhoook/*"
+}
+
+resource "archive_file" "runnerhook" {
+  type        = "zip"
+  output_path = "runnerhook.zip"
+
+  dynamic "source" {
+    for_each = module.files.files
+    content {
+      content  = file(source.value)
+      filename = split("/", source.value)[length(split("/", source.value)) - 1]
+    }
+  }
+  depends_on = [module.files]
+}
+
 resource "aws_lambda_function" "function" {
   function_name = var.namespace
   handler       = "handler.handler"
   runtime       = "python3.9"
   role          = var.serverless_role_arn
-  filename      = "../runnerhook.zip"
+  filename      = "runnerhook.zip"
   memory_size   = 128
   timeout       = 30
 
