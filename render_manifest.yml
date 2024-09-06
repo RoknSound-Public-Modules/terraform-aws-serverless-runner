@@ -1,9 +1,0 @@
----
-- template: CloudFormation/Tools.jinja.yml
-  strategy: in_place
-  destination: CloudFormation/Tools.yml
-
-- template: CloudFormation/template-configuration.jinja.json
-  strategy: each_env
-  include_tools: true
-  destination: CloudFormation/template-configuration.{env}.json

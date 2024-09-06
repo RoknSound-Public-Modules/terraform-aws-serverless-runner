@@ -61,23 +61,24 @@ resource "aws_apigatewayv2_api" "hook_api" {
   target = aws_lambda_function.function.arn
 }
 
-module "files" {
-  source  = "HappyPathway/files/ls"
-  pattern = "./runnerhoook/*"
-}
+# module "files" {
+#   source  = "HappyPathway/files/ls"
+#   pattern = "./runnerhoook/*"
+# }
 
 data "archive_file" "runnerhook" {
   type        = "zip"
   output_path = "runnerhook.zip"
 
-  dynamic "source" {
-    for_each = module.files.files
-    content {
-      content  = file(source.value)
-      filename = split("/", source.value)[length(split("/", source.value)) - 1]
-    }
-  }
-  depends_on = [module.files]
+  source_dir = "${path.module}/runnerhook"
+  # dynamic "source" {
+  #   for_each = module.files.files
+  #   content {
+  #     content  = file(source.value)
+  #     filename = split("/", source.value)[length(split("/", source.value)) - 1]
+  #   }
+  # }
+  # depends_on = [module.files]
 }
 
 resource "aws_lambda_function" "function" {
