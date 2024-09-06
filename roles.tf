@@ -17,25 +17,23 @@ resource "aws_iam_role" "ecs_task_role" {
     ]
   })
 
-  permissions_boundary = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/3mhis-iam-boundary-ecs-${var.ssi_prefix}"
-
-  inline_policy {
-    name = "change-set-permissions"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "cloudformation:CreateChangeSet",
-            "cloudformation:DeleteChangeSet",
-            "cloudformation:DescribeChangeSet"
-          ]
-          Resource = "*"
-        }
-      ]
-    })
-  }
+  # inline_policy {
+  #   name = "change-set-permissions"
+  #   policy = jsonencode({
+  #     Version = "2012-10-17"
+  #     Statement = [
+  #       {
+  #         Effect = "Allow"
+  #         Action = [
+  #           "cloudformation:CreateChangeSet",
+  #           "cloudformation:DeleteChangeSet",
+  #           "cloudformation:DescribeChangeSet"
+  #         ]
+  #         Resource = "*"
+  #       }
+  #     ]
+  #   })
+  # }
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
@@ -54,8 +52,6 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       }
     ]
   })
-
-  permissions_boundary = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/3mhis-iam-boundary-ecs-${var.ssi_prefix}"
 
   managed_policy_arns = [
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -99,7 +95,6 @@ resource "aws_iam_role" "runner_hook_role" {
     ]
   })
 
-  permissions_boundary = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/3mhis-iam-boundary-ecs-${var.ssi_prefix}"
 
   managed_policy_arns = [
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"

@@ -3,11 +3,6 @@ variable "namespace" {
   type        = string
 }
 
-variable "ssi_prefix" {
-  description = "Prefix used for resources needing boundary permissions"
-  type        = string
-}
-
 variable "vpc_id" {
   description = "VPC ID to build in"
   type        = string

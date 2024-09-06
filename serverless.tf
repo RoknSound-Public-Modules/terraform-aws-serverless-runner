@@ -85,7 +85,7 @@ resource "aws_lambda_function" "function" {
   handler       = "handler.handler"
   runtime       = "python3.9"
   role          = aws_iam_role.runner_hook_role.arn
-  filename      = "runnerhook.zip"
+  filename      = data.archive_file.runnerhook.output_path
   memory_size   = 128
   timeout       = 30
 
